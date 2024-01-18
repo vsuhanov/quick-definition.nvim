@@ -36,6 +36,7 @@ function M.quick_definition()
       -- { [1] = { ["lnum"] = 1,["text"] = function this_is_second_level_function(),["col"] = 10,["filename"] = /Users/vitaly/projects/quick-definition.nvim/lua/quick-definition/example2.lua,} ,}
       -- print(dump(l["items"]))
       -- print("bufnr of the first item in the list" .. l.items[0].bufnr)
+
       local filename = l["items"][1]["filename"]
       local bufnr = create_or_get_buffernr(filename)
       local win_id = _G.quickDefinitionWindowHandle
@@ -58,7 +59,7 @@ function M.quick_definition()
         group = autocmdGroup,
         callback = function()
           -- print("closing window, current window is " ..
-            -- vim.api.nvim_get_current_win())
+          -- vim.api.nvim_get_current_win())
           if _G.quickDefinitionWindowHandle == nil then
             return
           end
@@ -77,14 +78,9 @@ end
 
 function M.setup(opts)
   opts = opts or {}
-  print("hello")
-
   vim.api.nvim_create_user_command("QuickDefinition", function()
     M.quick_definition()
   end, {})
-  vim.keymap.set("n", "<leader>K", function() M.quick_definition() end, opts)
-  vim.keymap.set("n", "<2-LeftMouse>", function() M.quick_definition() end, opts)
-  vim.keymap.set("n", "<MiddleMouse>", function() vim.lsp.buf.definition() end, opts)
 end
 
 M.setup()

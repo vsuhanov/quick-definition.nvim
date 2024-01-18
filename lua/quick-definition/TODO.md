@@ -2,5 +2,5 @@
 - ☐ allow to quick exit on esc or q (or custom mapping) inside the quick definition window
 - ☐ show the name/path to the file in the quick definition window
 - ☐ allow to quickly jump to editing of the file in the window where it all started 
-- ☐ extract key bindings into my own configuration
+- ✓ ~~extract key bindings into my own configuration~~
 - ☐ configure my nvim to use deployed version
