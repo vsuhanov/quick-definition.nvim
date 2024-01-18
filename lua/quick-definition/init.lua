@@ -28,7 +28,24 @@ local function create_or_get_buffernr(filename)
 end
 
 require("quick-definition.example")
+local t = this_is_definition
 _G.quickDefinitionWindowHandle = nil
+
+local function update_quick_def_window_title()
+  print("update_quick_def_window_title is called")
+  if _G.quickDefinitionWindowHandle == nil then
+    return
+  end
+  if vim.api.nvim_win_is_valid(_G.quickDefinitionWindowHandle) and vim.api.nvim_get_current_win() == _G.quickDefinitionWindowHandle then
+    local bufnr = vim.api.nvim_get_current_buf()
+    local filepath = vim.api.nvim_buf_get_name(bufnr)
+    local relative_path = vim.fn.fnamemodify(filepath, ':.')
+    vim.api.nvim_win_set_config(_G.quickDefinitionWindowHandle, {
+      title = relative_path
+    })
+  end
+end
+
 function M.quick_definition()
   vim.lsp.buf.definition({
     on_list = function(l)
@@ -47,6 +64,9 @@ function M.quick_definition()
       end
       local cursor = { l["items"][1]["lnum"], l["items"][1]["col"] }
       vim.api.nvim_win_set_cursor(_G.quickDefinitionWindowHandle, cursor)
+      print("this is called")
+      update_quick_def_window_title()
+
       local autocmdGroup = vim.api.nvim_create_augroup("quick-definition-augroup", { clear = true })
       vim.api.nvim_create_autocmd("WinEnter", {
         group = autocmdGroup,
@@ -58,6 +78,15 @@ function M.quick_definition()
             vim.api.nvim_win_close(_G.quickDefinitionWindowHandle, true)
           end
           _G.quickDefinitionWindowHandle = nil
+        end
+      })
+
+      -- change the title if the buffer changes in the current window
+      vim.api.nvim_create_autocmd("BufWinEnter", {
+        group = autocmdGroup,
+        callback = function()
+          print("bufenter going to update quick-def title")
+          update_quick_def_window_title()
         end
       })
     end
