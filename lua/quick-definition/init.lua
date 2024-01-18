@@ -34,7 +34,6 @@ function M.quick_definition()
     on_list = function(l)
       -- { [1] = { ["lnum"] = 1,["text"] = function this_is_second_level_function(),["col"] = 10,["filename"] = /Users/vitaly/projects/quick-definition.nvim/lua/quick-definition/example2.lua,} ,}
       -- print(dump(l["items"]))
-      -- print("bufnr of the first item in the list" .. l.items[0].bufnr)
 
       local filename = l["items"][1]["filename"]
       local bufnr = create_or_get_buffernr(filename)
@@ -48,23 +47,13 @@ function M.quick_definition()
       end
       local cursor = { l["items"][1]["lnum"], l["items"][1]["col"] }
       vim.api.nvim_win_set_cursor(_G.quickDefinitionWindowHandle, cursor)
-      -- vim.api.nvim_win_set_config(_G.quickDefinitionWindowHandle, {
-      --   title = l["items"][1]["text"]
-      -- })
-      -- print("win id" .. win_id)
-      -- print("stored quick definition window handle " .. _G.quickDefinitionWindowHandle);
       local autocmdGroup = vim.api.nvim_create_augroup("quick-definition-augroup", { clear = true })
       vim.api.nvim_create_autocmd("WinEnter", {
         group = autocmdGroup,
         callback = function()
-          -- print("closing window, current window is " ..
-          -- vim.api.nvim_get_current_win())
           if _G.quickDefinitionWindowHandle == nil then
             return
           end
-          -- print("closing window");
-          -- print("closing window, current window is " ..
-          --   vim.api.nvim_get_current_win() .. " quick definition window handle " .. _G.quickDefinitionWindowHandle);
           if vim.api.nvim_win_is_valid(_G.quickDefinitionWindowHandle) then
             vim.api.nvim_win_close(_G.quickDefinitionWindowHandle, true)
           end
