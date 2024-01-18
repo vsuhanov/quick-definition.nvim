@@ -30,13 +30,13 @@ end
 require("quick-definition.example")
 _G.quickDefinitionWindowHandle = nil
 function M.quick_definition()
-  this_is_definition()
   vim.lsp.buf.definition({
     on_list = function(l)
       -- { [1] = { ["lnum"] = 1,["text"] = function this_is_second_level_function(),["col"] = 10,["filename"] = /Users/vitaly/projects/quick-definition.nvim/lua/quick-definition/example2.lua,} ,}
       -- print(dump(l["items"]))
       -- print("bufnr of the first item in the list" .. l.items[0].bufnr)
 
+      local filename = l["items"][1]["filename"]
       local filename = l["items"][1]["filename"]
       local bufnr = create_or_get_buffernr(filename)
       local win_id = _G.quickDefinitionWindowHandle
