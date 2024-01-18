@@ -37,7 +37,6 @@ function M.quick_definition()
       -- print("bufnr of the first item in the list" .. l.items[0].bufnr)
 
       local filename = l["items"][1]["filename"]
-      local filename = l["items"][1]["filename"]
       local bufnr = create_or_get_buffernr(filename)
       local win_id = _G.quickDefinitionWindowHandle
       if _G.quickDefinitionWindowHandle == nil then
