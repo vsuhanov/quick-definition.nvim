@@ -1,3 +1,4 @@
+- ☐ figure out development approach, once the plugin is installed it's a bit annoying to reload the plugin
 - ☐ allow to quick exit on esc or q (or custom mapping) inside the quick definition window
 - ☐ add a README.md file with description how to use it
 - ☐ make it so if there is no definition attempt to go to declaration/implementation until something pops
