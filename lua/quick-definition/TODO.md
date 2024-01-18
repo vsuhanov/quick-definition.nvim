@@ -4,3 +4,4 @@
 - ☐ allow to quickly jump to editing of the file in the window where it all started 
 - ✓ ~~extract key bindings into my own configuration~~
 - ☐ configure my nvim to use deployed version
+- ☐ add an autosave option so that the changes in quick-def buffer are saved on leave 
