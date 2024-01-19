@@ -28,11 +28,10 @@ local function create_or_get_buffernr(filename)
 end
 
 require("quick-definition.example")
-local t = this_is_definition
+-- local t = this_is_definition
 _G.quickDefinitionWindowHandle = nil
 
 local function update_quick_def_window_title()
-  print("update_quick_def_window_title is called")
   if _G.quickDefinitionWindowHandle == nil then
     return
   end
@@ -64,7 +63,6 @@ function M.quick_definition()
       end
       local cursor = { l["items"][1]["lnum"], l["items"][1]["col"] }
       vim.api.nvim_win_set_cursor(_G.quickDefinitionWindowHandle, cursor)
-      print("this is called")
       update_quick_def_window_title()
 
       local autocmdGroup = vim.api.nvim_create_augroup("quick-definition-augroup", { clear = true })
@@ -85,7 +83,6 @@ function M.quick_definition()
       vim.api.nvim_create_autocmd("BufWinEnter", {
         group = autocmdGroup,
         callback = function()
-          print("bufenter going to update quick-def title")
           update_quick_def_window_title()
         end
       })
