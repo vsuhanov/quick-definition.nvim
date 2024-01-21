@@ -45,19 +45,20 @@ local function update_quick_def_window_title()
   end
 end
 
-local function configure_enter_exit_hotkeys()
+local function remove_enter_exit_hotkeys()
   if _G.quickDefinitionWindowHandle == nil then
     return
   end
   if vim.api.nvim_win_is_valid(_G.quickDefinitionWindowHandle) and vim.api.nvim_get_current_win() == _G.quickDefinitionWindowHandle then
     local bufnr = vim.api.nvim_get_current_buf()
     -- vim.api.nvim_buf_get_keymap
+    print("setting up hotkeys for buf ".. bufnr);
     vim.api.nvim_buf_del_keymap(bufnr, "n", "q");
     vim.api.nvim_buf_del_keymap(bufnr, "n", "<esc>");
     vim.api.nvim_buf_del_keymap(bufnr, "n", "<cr>");
   end
 end
-local function remove_enter_exit_hotkeys()
+local function configure_enter_exit_hotkeys()
   if _G.quickDefinitionWindowHandle == nil then
     return
   end
