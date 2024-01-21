@@ -28,7 +28,7 @@ local function create_or_get_buffernr(filename)
 end
 
 require("quick-definition.example")
--- local t = this_is_definition
+local t = this_is_definition
 _G.quickDefinitionWindowHandle = nil
 
 local function update_quick_def_window_title()
@@ -45,32 +45,57 @@ local function update_quick_def_window_title()
   end
 end
 
-local function remove_enter_exit_hotkeys()
+local buffers_with_configured_hotkeys = {}
+
+local function set_enter_exit_hotkeys(bufnr)
+  local t = buffers_with_configured_hotkeys[bufnr] == true and "true" or "false"
+  -- print("check that buffer has hotkeys configured, " .. bufnr .. " " .. t)
+  if buffers_with_configured_hotkeys[bufnr] == true then return end
+  buffers_with_configured_hotkeys[bufnr] = true
+  local filepath = vim.api.nvim_buf_get_name(bufnr)
+  local absolute_path = vim.fn.fnamemodify(filepath, ":p")
+  -- print("going to configure local keymap for bufnr " .. bufnr)
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "q", ":wq<cr>", { silent = true })
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "<esc>", ":wq<cr>", { silent = true })
+  vim.keymap.set("n", "<cr>", function()
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    -- print("command to execute " .. ":wq<cr>:e " .. absolute_path .. "<cr>")
+    vim.api.nvim_win_close(0, true)
+    vim.api.nvim_win_set_buf(0, bufnr)
+    vim.api.nvim_win_set_cursor(0, cursor)
+  end, { silent = true, buffer = bufnr })
+end
+
+local function configure_enter_exit_hotkeys()
+  -- print "configure_enter_exit_hotkeys is called"
+  -- print("current win " ..
+  -- vim.api.nvim_get_current_win() ..
+  -- " quickDefinitionWindowHandle " .. (_G.quickDefinitionWindowHandle ~= nil and _G.quickDefinitionWindowHandle or "nil"))
   if _G.quickDefinitionWindowHandle == nil then
     return
   end
   if vim.api.nvim_win_is_valid(_G.quickDefinitionWindowHandle) and vim.api.nvim_get_current_win() == _G.quickDefinitionWindowHandle then
     local bufnr = vim.api.nvim_get_current_buf()
-    -- vim.api.nvim_buf_get_keymap
-    print("setting up hotkeys for buf ".. bufnr);
-    vim.api.nvim_buf_del_keymap(bufnr, "n", "q");
-    vim.api.nvim_buf_del_keymap(bufnr, "n", "<esc>");
-    vim.api.nvim_buf_del_keymap(bufnr, "n", "<cr>");
+    -- don't set up hotkeys multiple times
+    set_enter_exit_hotkeys(bufnr)
   end
 end
-local function configure_enter_exit_hotkeys()
-  if _G.quickDefinitionWindowHandle == nil then
-    return
+
+local function remove_enter_exit_hotkeys()
+  -- print(dump(buffers_with_configured_hotkeys))
+  -- print(dump(pairs(buffers_with_configured_hotkeys)))
+  for bufnr, _ in pairs(buffers_with_configured_hotkeys) do
+    -- print("removing hotkeys for buf " .. bufnr);
+    local status, err = pcall(function()
+      vim.api.nvim_buf_del_keymap(bufnr, "n", "q");
+      vim.api.nvim_buf_del_keymap(bufnr, "n", "<esc>");
+      vim.api.nvim_buf_del_keymap(bufnr, "n", "<cr>");
+    end)
+    if err then
+      print("error while unsetting keymap" .. vim.inspect(err))
+    end
   end
-  if vim.api.nvim_win_is_valid(_G.quickDefinitionWindowHandle) and vim.api.nvim_get_current_win() == _G.quickDefinitionWindowHandle then
-    local bufnr = vim.api.nvim_get_current_buf()
-    -- vim.api.nvim_buf_get_keymap
-    local filepath = vim.api.nvim_buf_get_name(bufnr);
-    local absolute_path = vim.fn.fnamemodify(filepath, ":p");
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "q", ":wq<cr>", { silent = true });
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "<esc>", ":wq<cr>", { silent = true });
-    vim.api.nvim_buf_set_keymap(bufnr, "n", "<cr>", ":wq<cr>:e " .. absolute_path .. "<cr>", { silent = true });
-  end
+  buffers_with_configured_hotkeys = {}
 end
 
 function M.quick_definition()
@@ -81,66 +106,68 @@ function M.quick_definition()
 
       local filename = l["items"][1]["filename"]
       local bufnr = create_or_get_buffernr(filename)
-      local win_id = _G.quickDefinitionWindowHandle
       if _G.quickDefinitionWindowHandle == nil then
-        win_id = vim.api.nvim_open_win(bufnr, true,
+        _G.quickDefinitionWindowHandle = vim.api.nvim_open_win(bufnr, true,
           { width = 80, height = 30, relative = "cursor", row = 1, col = 1, border = "rounded" })
-        _G.quickDefinitionWindowHandle = win_id
+        -- print("right after window is created")
+        -- can't find an event to which attach, have to call the juice of the event handler because event handler checks for quickDefinitionWindowHandle
+        set_enter_exit_hotkeys(bufnr);
       else
         vim.api.nvim_win_set_buf(_G.quickDefinitionWindowHandle, bufnr)
       end
       local cursor = { l["items"][1]["lnum"], l["items"][1]["col"] }
       vim.api.nvim_win_set_cursor(_G.quickDefinitionWindowHandle, cursor)
       update_quick_def_window_title()
-
-      local autocmdGroup = vim.api.nvim_create_augroup("quick-definition-augroup", { clear = true })
-      vim.api.nvim_create_autocmd("WinEnter", {
-        group = autocmdGroup,
-        callback = function()
-          if _G.quickDefinitionWindowHandle == nil then
-            return
-          end
-          if vim.api.nvim_win_is_valid(_G.quickDefinitionWindowHandle) then
-            vim.api.nvim_win_close(_G.quickDefinitionWindowHandle, true)
-          end
-          _G.quickDefinitionWindowHandle = nil
-        end
-      })
-
-      -- change the title if the buffer changes in the current window
-      vim.api.nvim_create_autocmd("BufWinEnter", {
-        group = autocmdGroup,
-        callback = function()
-          update_quick_def_window_title()
-        end
-      })
-      -- configure exit/enter hotkeys
-      vim.api.nvim_create_autocmd("BufWinEnter", {
-        group = autocmdGroup,
-        callback = function()
-          configure_enter_exit_hotkeys()
-        end
-      })
-      -- clear exit/enter hotkeys
-      vim.api.nvim_create_autocmd("BufLeave", {
-        group = autocmdGroup,
-        callback = function()
-          remove_enter_exit_hotkeys()
-        end
-      })
-      -- BufLeave won't be triggered if closing the window leads to a window for the same buffer
-      vim.api.nvim_create_autocmd("WinLeave", {
-        group = autocmdGroup,
-        callback = function()
-          remove_enter_exit_hotkeys()
-        end
-      })
     end
   })
 end
 
 function M.setup(opts)
   opts = opts or {}
+  local autocmdGroup = vim.api.nvim_create_augroup("quick-definition-augroup", { clear = true })
+  -- print("Is this even called? ")
+  vim.api.nvim_create_autocmd("WinEnter", {
+    group = autocmdGroup,
+    callback = function()
+      if _G.quickDefinitionWindowHandle == nil then
+        return
+      end
+      if vim.api.nvim_win_is_valid(_G.quickDefinitionWindowHandle) then
+        vim.api.nvim_win_close(_G.quickDefinitionWindowHandle, true)
+      end
+      _G.quickDefinitionWindowHandle = nil
+    end
+  })
+
+  -- change the title if the buffer changes in the current window
+  vim.api.nvim_create_autocmd("BufWinEnter", {
+    group = autocmdGroup,
+    callback = function()
+      update_quick_def_window_title()
+    end
+  })
+  -- configure exit/enter hotkeys
+  vim.api.nvim_create_autocmd("BufWinEnter", {
+    group = autocmdGroup,
+    callback = function()
+      configure_enter_exit_hotkeys()
+    end
+  })
+  -- -- configure exit/enter hotkeys on WinEnter, BufWinEnter won't be triggered if it's the same buffer
+  -- vim.api.nvim_create_autocmd("WinEnter", {
+  --   group = autocmdGroup,
+  --   callback = function()
+  --     print("WinEnter for configure_enter_exit_hotkeys is triggered")
+  --     configure_enter_exit_hotkeys()
+  --   end
+  -- })
+  -- BufLeave won't be triggered if closing the window leads to a window for the same buffer
+  vim.api.nvim_create_autocmd("WinLeave", {
+    group = autocmdGroup,
+    callback = function()
+      remove_enter_exit_hotkeys()
+    end
+  })
   vim.api.nvim_create_user_command("QuickDefinition", function()
     M.quick_definition()
   end, {})
