@@ -100,11 +100,8 @@ end
 
 function M.quick_definition()
   vim.lsp.buf.definition({
-    on_list = function(l)
-      -- { [1] = { ["lnum"] = 1,["text"] = function this_is_second_level_function(),["col"] = 10,["filename"] = /Users/vitaly/projects/quick-definition.nvim/lua/quick-definition/example2.lua,} ,}
-      -- print(dump(l["items"]))
-
-      local filename = l["items"][1]["filename"]
+    on_list = function(locations)
+      local filename = locations["items"][1]["filename"]
       local bufnr = create_or_get_buffernr(filename)
       if _G.quickDefinitionWindowHandle == nil then
         _G.quickDefinitionWindowHandle = vim.api.nvim_open_win(bufnr, true,
@@ -115,7 +112,7 @@ function M.quick_definition()
       else
         vim.api.nvim_win_set_buf(_G.quickDefinitionWindowHandle, bufnr)
       end
-      local cursor = { l["items"][1]["lnum"], l["items"][1]["col"] }
+      local cursor = { locations["items"][1]["lnum"], locations["items"][1]["col"] }
       vim.api.nvim_win_set_cursor(_G.quickDefinitionWindowHandle, cursor)
       update_quick_def_window_title()
     end
