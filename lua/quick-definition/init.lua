@@ -28,7 +28,6 @@ local function create_or_get_buffernr(filename)
 end
 
 require("quick-definition.example")
-local t = this_is_definition
 _G.quickDefinitionWindowHandle = nil
 
 local function update_quick_def_window_title()
@@ -48,8 +47,6 @@ end
 local buffers_with_configured_hotkeys = {}
 
 local function set_enter_exit_hotkeys(bufnr)
-  local t = buffers_with_configured_hotkeys[bufnr] == true and "true" or "false"
-  -- print("check that buffer has hotkeys configured, " .. bufnr .. " " .. t)
   if buffers_with_configured_hotkeys[bufnr] == true then return end
   buffers_with_configured_hotkeys[bufnr] = true
   local filepath = vim.api.nvim_buf_get_name(bufnr)
@@ -98,6 +95,8 @@ local function remove_enter_exit_hotkeys()
   buffers_with_configured_hotkeys = {}
 end
 
+_G.quickDefinitionWindowHeight = 30
+_G.quickDefinitionWindowWidth = 80
 function M.quick_definition()
   vim.lsp.buf.definition({
     on_list = function(locations)
@@ -105,7 +104,15 @@ function M.quick_definition()
       local bufnr = create_or_get_buffernr(filename)
       if _G.quickDefinitionWindowHandle == nil then
         _G.quickDefinitionWindowHandle = vim.api.nvim_open_win(bufnr, true,
-          { width = 80, height = 30, relative = "cursor", row = 1, col = 1, border = "rounded" })
+          {
+            width = _G.quickDefinitionWindowWidth,
+            height = _G.quickDefinitionWindowHeight,
+            relative = "cursor",
+            row = 1,
+            col = 1,
+            border =
+            "rounded"
+          })
         -- print("right after window is created")
         -- can't find an event to which attach, have to call the juice of the event handler because event handler checks for quickDefinitionWindowHandle
         set_enter_exit_hotkeys(bufnr);
@@ -122,7 +129,6 @@ end
 function M.setup(opts)
   opts = opts or {}
   local autocmdGroup = vim.api.nvim_create_augroup("quick-definition-augroup", { clear = true })
-  -- print("Is this even called? ")
   vim.api.nvim_create_autocmd("WinEnter", {
     group = autocmdGroup,
     callback = function()
@@ -141,12 +147,6 @@ function M.setup(opts)
     group = autocmdGroup,
     callback = function()
       update_quick_def_window_title()
-    end
-  })
-  -- configure exit/enter hotkeys
-  vim.api.nvim_create_autocmd("BufWinEnter", {
-    group = autocmdGroup,
-    callback = function()
       configure_enter_exit_hotkeys()
     end
   })
@@ -159,6 +159,17 @@ function M.setup(opts)
   --   end
   -- })
   -- BufLeave won't be triggered if closing the window leads to a window for the same buffer
+
+
+  vim.api.nvim_create_autocmd("WinResized", {
+    group = autocmdGroup,
+    callback = function()
+      if _G.quickDefinitionWindowHandle == nil then return end
+      _G.quickDefinitionWindowWidth = vim.api.nvim_win_get_width(0)
+      _G.quickDefinitionWindowHeight = vim.api.nvim_win_get_height(0)
+    end,
+  })
+
   vim.api.nvim_create_autocmd("WinLeave", {
     group = autocmdGroup,
     callback = function()
