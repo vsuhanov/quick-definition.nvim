@@ -1,7 +1,7 @@
-- ☐ figure out development approach, once the plugin is installed it's a bit annoying to reload the plugin
+- ✓ ~~figure out development approach, once the plugin is installed it's a bit annoying to reload the plugin~~
 - ✓ ~~allow to quick exit on esc or q (or custom mapping) inside the quick definition window~~
         - ✓ ~~this needs to be added to each buffer that enters this window and be removed on BufLeave event?~~ 
-        need to investigate if it's safe to write the buffer if there are any changes - should not update files outside of the worskapce but it's hard to tell which file is
+        - ✓ ~~need to investigate if it's safe to write the buffer if there are any changes - should not update files outside of the worskapce but it's hard to tell which file is
 - ☐ check if buffer already has mappings for the desired keys, if they exist don't add new ones. 
 - ☐ allow configuring custom keymaps for exit/enter
 - ☐ add a README.md file with description how to use it
@@ -11,4 +11,6 @@
 - ✓ ~~extract key bindings into my own configuration~~
 - ✓ ~~configure my nvim to use deployed version~~
 - ☐ add an autosave option so that the changes in quick-def buffer are saved on leave 
-- ☐ if there are multiple definitions open all of them in multiple floating windows. provide a property to specify how many items to open this way
+- ✓ ~~if there are multiple definitions open all of them in multiple floating windows. provide a property to specify how many items to open this way~~~~
+if there is no definitions found - try searching for a file with the name under cursor and show that instead (poor man's definition)
+    - ☐ if there is no file with such name... no idea
